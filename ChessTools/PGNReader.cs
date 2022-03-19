@@ -4,11 +4,11 @@ using System.Text;
 using System.IO;
 namespace ChessTools
 {
-    class PGNReader
+    public class PGNReader
     {
         public List<ChessGame> games;
 
-        PGNReader()
+        public PGNReader()
         {
             games = new List<ChessGame>();
 
@@ -32,63 +32,131 @@ namespace ChessTools
         {
             string[] lines = File.ReadAllLines(filename);
             ChessGame game = new ChessGame();
-            foreach (string line in lines)
+            int emptyLine = 0;
+            foreach(string line in lines)
             {
-
-
-                string temp = "";
-                if (line[0] == '[')
+                
+                string data;
+                if (line.StartsWith("[Event \""))
                 {
-                    for (int i = 0; i < line.Length; i++)
+                    data = extractData(line);
+                    game.Event = data;
+                }
+                else if (line.StartsWith("[Site \""))
+                {
+                    data = extractData(line);
+                    game.Site = data;
+                }
+                else if (line.StartsWith("[Date \""))
+                {
+                    data = extractData(line);
+                    game.Date = data;
+                }
+                else if (line.StartsWith("[Round \""))
+                {
+                    data = extractData(line);
+                    game.Round = data;
+                }
+                else if (line.StartsWith("[White \""))
+                {
+                    data = extractData(line);
+                    game.White = data;
+                }
+                else if (line.StartsWith("[Black \""))
+                {
+                    
+                    data = extractData(line);
+                    game.Black = data;
+                }
+                else if (line.StartsWith("[Result \""))
+                {
+                    data = extractData(line);
+                    if(data == "1-0")
                     {
-                        int leftBCount = 0;
-                        int rightBCount = 0;
-                        //Check brackets
-                        if (line[i] == '[')
-                        {
-                            leftBCount++;
-                        }
-                        else if (line[i] == ']')
-                        {
-                            rightBCount++;
-                        }
-                        if (line[i] == '"')
-                        {
-                            while (line[i] != ']')
-                            {
-                                temp += line[i];
-                                i++;
-                            }
-                            if (line[line.Length - 1] != ']')
-                            {
-                                throw new Exception("No Closing bracket");
-                            }
-                            if (line[line.Length - 2] != '"')
-                            {
-                                throw new Exception("There are no closing quotes");
-                            }
-                        }
-
-                        if (leftBCount != rightBCount && leftBCount > 1 || rightBCount > 1)
-                        {
-                            throw new Exception("Brackets Not allowed");
-                        }
+                        data = "W";
 
                     }
+                    else if (data == "0-1")
+                    {
+                        data = "B";
+                    }
+                    else
+                    {
+                        data = "D";
+                    }
+                    game.Result = data;
                 }
-                else if (line == "")
-                    continue;
+                else if (line.StartsWith("[WhiteElo \""))
+                {
+                    data = extractData(line);
+                    game.WhiteElo = data;
+                }
+                else if (line.StartsWith("[BlackElo \""))
+                {
+                    data = extractData(line);
+                    game.BlackElo = data;
+                }
+                else if (line.StartsWith("[ECO \""))
+                {
+                    data = extractData(line);
+                    game.ECO = data;
+                }
+                else if (line.StartsWith("[EventDate \""))
+                {
+                    data = extractData(line);
+                    if (data.Contains("?"))
+                    {
+                        game.EventDate = DateTime.MinValue;
+                        continue;
+                    }
+                    game.EventDate = DateTime.Parse(data);
+                }
+                else if(line == "")
+                {
+                    emptyLine++;
+                }
                 else
                 {
-                    temp += line;
+                    game.Moves += line;
                 }
 
-                if (game.ValsNull())
+
+                    if (emptyLine == 2)
                 {
-
+                    games.Add(game);
+                    emptyLine = 0;
+                    game = new ChessGame();
                 }
-
             }
+            
+        }
+
+        public string extractData(string line)
+        {
+            string temp = "";
+            if (line[line.Length - 1] != ']')
+            {
+                throw new Exception("No Closing bracket");
+            }
+            if (line[line.Length - 2] != '"')
+            {
+                throw new Exception("There are no closing quotes");
+            }
+            for (int i = 0; i < line.Length; i++)
+            {
+                
+                if (line[i] == '"')
+                {
+                    i++;
+                    while (line[i] != '"')
+                    {
+                        temp += line[i];
+                        i++;
+                    }
+                    
+                }
+            }
+            return temp;
         }
 
         
