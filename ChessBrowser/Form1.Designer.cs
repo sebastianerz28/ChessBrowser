@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using ChessTools;
+using System.Text;
+
 namespace ChessBrowser
 {
     partial class Form1
@@ -29,7 +31,7 @@ namespace ChessBrowser
             // assuimg you've typed a user and password in the GUI
             string connection = GetConnectionString();
 
-            
+
             //       We recommend creating separate libraries to represent chess data and load the file
             PGNReader reader = new PGNReader();
             reader.ReadLines(PGNfilename);
@@ -49,13 +51,13 @@ namespace ChessBrowser
                     // TODO: iterate through your data and generate appropriate insert commands
                     foreach (ChessGame game in reader.games)
                     {
-                        
+
                         //Insert White Player
                         MySqlCommand playerSearchCommand = conn.CreateCommand();
                         playerSearchCommand.CommandText = "Select * from Players where Name = @WhiteName;";
                         playerSearchCommand.Parameters.AddWithValue("@WhiteName", game.White);
                         MySqlDataReader playerSearchReader = playerSearchCommand.ExecuteReader();
-                        
+
 
                         MySqlCommand insertWhitePlayer = conn.CreateCommand();
                         insertWhitePlayer.Parameters.AddWithValue("@name", game.White);
@@ -84,7 +86,7 @@ namespace ChessBrowser
                         playerSearchCommand.CommandText = "Select * from Players where Name = @BlackName;";
                         playerSearchCommand.Parameters.AddWithValue("@BlackName", game.Black);
                         playerSearchReader = playerSearchCommand.ExecuteReader();
-                        
+
 
                         MySqlCommand insertBlackPlayer = conn.CreateCommand();
                         insertBlackPlayer.Parameters.AddWithValue("@name", game.Black);
@@ -103,7 +105,7 @@ namespace ChessBrowser
                         }
 
 
-                        
+
 
                         //Insert Event
                         MySqlCommand eventSearchCommand = conn.CreateCommand();
@@ -120,7 +122,7 @@ namespace ChessBrowser
                         insertEvent.Parameters.AddWithValue("@Site", game.Site);
                         insertEvent.Parameters.AddWithValue("@Date", game.EventDate);
 
-                        
+
                         if (!eventSearcher.HasRows)
                         {
                             eventSearcher.Close();
@@ -131,8 +133,8 @@ namespace ChessBrowser
                         {
                             eventSearcher.Close();
                         }
-                        
-                        //Insert Games
+
+                        //Insert Game
                         MySqlCommand searchIDEvent = conn.CreateCommand();
                         searchIDEvent.CommandText = "Select eID from Events where Name = @EventName and Site = @EventSite and Date = @EventDate";
                         searchIDEvent.Parameters.AddWithValue("@EventName", game.Event);
@@ -142,7 +144,7 @@ namespace ChessBrowser
                         dataReader.Read();
                         string eID = dataReader["eID"].ToString();
                         dataReader.Close();
-                        
+
 
                         MySqlCommand searchIDPlayer = conn.CreateCommand();
                         searchIDPlayer.CommandText = "Select pID from Players where Name = @WhitePlayerName";
@@ -151,7 +153,7 @@ namespace ChessBrowser
                         dataReader.Read();
                         string wID = dataReader["pID"].ToString();
                         dataReader.Close();
-                        
+
 
                         searchIDPlayer.CommandText = "Select pID from Players where Name = @BlackPlayerName";
                         searchIDPlayer.Parameters.AddWithValue("@BlackPlayerName", game.Black);
@@ -159,7 +161,7 @@ namespace ChessBrowser
                         dataReader.Read();
                         string bID = dataReader["pID"].ToString();
                         dataReader.Close();
-                        
+
 
                         //Inset a Game
                         MySqlCommand insertGame = conn.CreateCommand();
@@ -174,7 +176,7 @@ namespace ChessBrowser
 
                         WorkStepCompleted();
                     }
-                    
+
                     // Use this to tell the GUI that one work step has completed:
                     // WorkStepCompleted();
 
@@ -209,6 +211,8 @@ namespace ChessBrowser
             // assuimg you've typed a user and password in the GUI
             string connection = GetConnectionString();
 
+
+
             // Build up this string containing the results from your query
             string parsedResult = "";
 
@@ -216,27 +220,271 @@ namespace ChessBrowser
             // (see below return statement)
             int numRows = 0;
 
+
             using (MySqlConnection conn = new MySqlConnection(connection))
             {
                 try
                 {
                     // Open a connection
-                    
                     conn.Open();
+
+                    /*
+                     * select white player everything
+                     * 
+             
+                     * select black player everything
+                     * select games with corresponding player ID
+                     * optionally select moves
+                     * select date of eventID
+                     * 
+                     */
+                    if (start.Equals(end))
+                    {
+                        end = start.AddHours(23.0);
+                    }
+                    string[] whitePlayer = { "", "", "" };
+                    string[] blackPlayer = { "", "", "" };
+                    //Select white player info
+                    if (white != "")
+                    {
+                        MySqlCommand selectWhitePlayer = new MySqlCommand("select * from Players where Name = @Name;", conn);
+                        selectWhitePlayer.Parameters.AddWithValue("@Name", white);
+                        MySqlDataReader reader = selectWhitePlayer.ExecuteReader();
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            whitePlayer[0] = (string)reader["Name"];
+                            whitePlayer[1] = reader["Elo"].ToString();
+                            whitePlayer[2] = "" + reader["pID"].ToString();
+                            
+                        }
+                        reader.Close();
+                        if (whitePlayer[2] == "")
+                        {
+                            return numRows + " results\r\n\r\n" + parsedResult;
+                        }
+                    }
+                    //Select black player info
+                    if (black != "")
+                    {
+                        MySqlCommand selectBlackPlayer = new MySqlCommand("select * from Players where Name = @Name;", conn);
+                        selectBlackPlayer.Parameters.AddWithValue("@Name", black);
+                        MySqlDataReader reader = selectBlackPlayer.ExecuteReader();
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            blackPlayer[0] = (string)reader["Name"];
+                            blackPlayer[1] = reader["Elo"].ToString();
+                            blackPlayer[2] = "" + reader["pID"].ToString();
+                            
+                        }
+                        reader.Close();
+                        if (blackPlayer[2] == "")
+                        {
+                            return numRows + " results\r\n\r\n" + parsedResult;
+                        }
+                    }
+
+                    
+
+                    MySqlCommand selectGames = conn.CreateCommand();
+
+                    if (useDate)
+                    {
+                        if (showMoves)
+                        {
+
+                            selectGames.CommandText = "Select * from Games join Events where Games.eID = Events.eID";
+                            if (black != "")
+                            {
+                                selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
+                            }
+                            if (white != "")
+                            {
+                                selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
+                            }
+                            if (opening != "")
+                            {
+                                selectGames.CommandText += " and Games.Moves like @opening";
+                            }
+                            if (winner == "Draw")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'D'";
+                            }
+                            else if (winner == "White")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'W'";
+                            }
+                            else if (winner == "Black")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'B'";
+                            }
+                            selectGames.CommandText += " and Events.Date between @start and @end;";
+                        }
+                        else
+                        {
+
+                            selectGames.CommandText = "Select * from Games join Events where Games.eID = Events.eID";
+                            if (black != "")
+                            {
+                                selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
+                            }
+                            if (white != "")
+                            {
+                                selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
+                            }
+                            if (opening != "")
+                            {
+                                selectGames.CommandText += " and Games.Moves like @opening";
+                            }
+                            if (winner == "Draw")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'D'";
+                            }
+                            else if (winner == "White")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'W'";
+                            }
+                            else if (winner == "Black")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'B'";
+                            }
+                            selectGames.CommandText += " and Events.Date between @start and @end;";
+                        }
+                    }
+                    else
+                    {
+                        if (showMoves)
+                        {
+                            selectGames.CommandText = "Select * from Games natural join Events where Games.eID = Events.eID";
+                            if (black != "")
+                            {
+                                selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
+                            }
+                            if (white != "")
+                            {
+                                selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
+                            }
+                            if (opening != "")
+                            {
+                                selectGames.CommandText += " and Games.Moves like @opening";
+                            }
+                            if (winner == "Draw")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'D'";
+                            }
+                            else if (winner == "White")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'W'";
+                            }
+                            else if (winner == "Black")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'B'";
+                            }
+                            selectGames.CommandText += ";";
+
+                        }
+                        else
+                        {
+                            selectGames.CommandText = "Select * from Games join Events where Games.eID = Events.eID";
+                            if (black != "")
+                            {
+                                selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
+                            }
+                            if (white != "")
+                            {
+                                selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
+                            }
+                            if (opening != "")
+                            {
+                                selectGames.CommandText += " and Games.Moves like @opening";
+                            }
+
+                            if(winner == "Draw")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'D'";
+                            }
+                            else if(winner == "White")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'W'";
+                            }
+                            else if(winner == "Black")
+                            {
+                                selectGames.CommandText += " and Games.Result = 'B'";
+                            }
+
+                            selectGames.CommandText += ";";
+                        }
+                    }
+                    selectGames.Parameters.AddWithValue("@start", start);
+                    selectGames.Parameters.AddWithValue("@end", end);
+                    selectGames.Parameters.AddWithValue("@opening", opening + "%");
+                    MySqlDataReader results = selectGames.ExecuteReader();
+                    StringBuilder s = new StringBuilder();
+
+                    while (results.Read())
+                    {
+                        if (white == "")
+                        {
+                            using (MySqlConnection nameConn = new MySqlConnection(GetConnectionString()))
+                            {
+                                nameConn.Open();
+                                MySqlCommand selectWhitePlayer = new MySqlCommand("select * from Players where pID = @pID;", nameConn);
+                                selectWhitePlayer.Parameters.AddWithValue("@pID", results["WhitePlayer"]);
+                                MySqlDataReader reader = selectWhitePlayer.ExecuteReader();
+                                reader.Read();
+                                whitePlayer[0] = (string)reader["Name"];
+                                whitePlayer[1] = reader["Elo"].ToString();
+                                whitePlayer[2] = "" + reader["pID"].ToString();
+                                reader.Close();
+                            }
+                        }
+                        if (black == "")
+                        {
+                            using (MySqlConnection nameConn = new MySqlConnection(GetConnectionString()))
+                            {
+                                nameConn.Open();
+                                MySqlCommand selectBlackPlayer = new MySqlCommand("select * from Players where pID = @pID;", nameConn);
+                                selectBlackPlayer.Parameters.AddWithValue("@pID", results["BlackPlayer"]);
+                                MySqlDataReader reader = selectBlackPlayer.ExecuteReader();
+                                reader.Read();
+                                blackPlayer[0] = (string)reader["Name"];
+                                blackPlayer[1] = reader["Elo"].ToString();
+                                blackPlayer[2] = "" + reader["pID"].ToString();
+                                reader.Close();
+                            }
+                        }
+                        FormatData(s, blackPlayer[0], blackPlayer[1], whitePlayer[0], whitePlayer[1], (string)results["Name"], results["Date"].ToString(), (string)results["Site"], (string)results["Result"], (string)results["Moves"], showMoves);
+                        numRows++;
+                    }
+                    parsedResult = s.ToString();
                     // TODO: Generate and execute an SQL command,
                     //       then parse the results into an appropriate string
                     //       and return it.
                     //       Remember that the returned string must use \r\n newlines
                     //opening rougly where moves like text %%
-
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
                 }
             }
-
             return numRows + " results\r\n\r\n" + parsedResult;
+        }
+
+        private void FormatData(StringBuilder parsedResult, string BlackName, string BlackElo, string WhiteName, string WhiteElo, string Event, string Date, string site, string result, string moves, bool useMoves)
+        {
+            parsedResult.Append("Event: " + Event + "\r\n");
+            parsedResult.Append("Site: " + site + "\r\n");
+            parsedResult.Append("Date: " + Date + "\r\n");
+            parsedResult.Append("White: " + WhiteName + " (" + WhiteElo + ")" + "\r\n");
+            parsedResult.Append("White: " + BlackName + " (" + BlackElo + ")" + "\r\n");
+            parsedResult.Append("Result: " + result + "\r\n");
+            if (useMoves)
+            {
+                parsedResult.Append("Moves: " + moves + "\r\n");
+            }
+            parsedResult.Append("\r\n");
         }
 
 
