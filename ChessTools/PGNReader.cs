@@ -39,38 +39,38 @@ namespace ChessTools
                 string data;
                 if (line.StartsWith("[Event \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.Event = data;
                 }
                 else if (line.StartsWith("[Site \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.Site = data;
                 }
                 else if (line.StartsWith("[Date \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.Date = data;
                 }
                 else if (line.StartsWith("[Round \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.Round = data;
                 }
                 else if (line.StartsWith("[White \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.White = data;
                 }
                 else if (line.StartsWith("[Black \""))
                 {
                     
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.Black = data;
                 }
                 else if (line.StartsWith("[Result \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     if(data == "1-0")
                     {
                         data = "W";
@@ -88,22 +88,22 @@ namespace ChessTools
                 }
                 else if (line.StartsWith("[WhiteElo \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.WhiteElo = data;
                 }
                 else if (line.StartsWith("[BlackElo \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.BlackElo = data;
                 }
                 else if (line.StartsWith("[ECO \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     game.ECO = data;
                 }
                 else if (line.StartsWith("[EventDate \""))
                 {
-                    data = extractData(line);
+                    data = ExtractData(line);
                     if (data.Contains("?"))
                     {
                         game.EventDate = DateTime.MinValue;
@@ -131,7 +131,7 @@ namespace ChessTools
             
         }
 
-        public string extractData(string line)
+        public string ExtractData(string line)
         {
             string temp = "";
             if (line[line.Length - 1] != ']')
