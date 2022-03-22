@@ -295,60 +295,74 @@ namespace ChessBrowser
                         {
 
                             selectGames.CommandText = "Select * from Games join Events where Games.eID = Events.eID";
+                            //Apply black filter
                             if (black != "")
                             {
                                 selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
                             }
+                            //Apply white filter
                             if (white != "")
                             {
                                 selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
                             }
+                            //Apply opening filter
                             if (opening != "")
                             {
                                 selectGames.CommandText += " and Games.Moves like @opening";
                             }
+                            //Apply win filter
                             if (winner == "Draw")
                             {
                                 selectGames.CommandText += " and Games.Result = 'D'";
                             }
+                            //Apply win filter
                             else if (winner == "White")
                             {
                                 selectGames.CommandText += " and Games.Result = 'W'";
                             }
+                            //Apply win filter
                             else if (winner == "Black")
                             {
                                 selectGames.CommandText += " and Games.Result = 'B'";
                             }
+                            //Apply events filter
                             selectGames.CommandText += " and Events.Date between @start and @end;";
                         }
                         else
                         {
 
                             selectGames.CommandText = "Select * from Games join Events where Games.eID = Events.eID";
+                            //Apply black filter
                             if (black != "")
                             {
                                 selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
                             }
+                            //Apply white filter
                             if (white != "")
                             {
                                 selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
                             }
+                            //Apply opening filter
                             if (opening != "")
                             {
                                 selectGames.CommandText += " and Games.Moves like @opening";
                             }
+                            //Apply winner filter
                             if (winner == "Draw")
                             {
                                 selectGames.CommandText += " and Games.Result = 'D'";
                             }
+                            //Apply winner filter
                             else if (winner == "White")
                             {
                                 selectGames.CommandText += " and Games.Result = 'W'";
                             }
+                            //Apply winner filter
                             else if (winner == "Black")
                             {
                                 selectGames.CommandText += " and Games.Result = 'B'";
                             }
+                            //Apply date filter
                             selectGames.CommandText += " and Events.Date between @start and @end;";
                         }
                     }
@@ -357,26 +371,32 @@ namespace ChessBrowser
                         if (showMoves)
                         {
                             selectGames.CommandText = "Select * from Games natural join Events where Games.eID = Events.eID";
+                            //Apply player filter
                             if (black != "")
                             {
                                 selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
                             }
+                            //Apply player filter
                             if (white != "")
                             {
                                 selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
                             }
+                            //Apply opening filter
                             if (opening != "")
                             {
                                 selectGames.CommandText += " and Games.Moves like @opening";
                             }
+                            //Apply winner filter
                             if (winner == "Draw")
                             {
                                 selectGames.CommandText += " and Games.Result = 'D'";
                             }
+                            //Apply winner filter
                             else if (winner == "White")
                             {
                                 selectGames.CommandText += " and Games.Result = 'W'";
                             }
+                            //Apply winner filter
                             else if (winner == "Black")
                             {
                                 selectGames.CommandText += " and Games.Result = 'B'";
@@ -387,28 +407,33 @@ namespace ChessBrowser
                         else
                         {
                             selectGames.CommandText = "Select * from Games join Events where Games.eID = Events.eID";
+                            //Apply player filter
                             if (black != "")
                             {
                                 selectGames.CommandText += " and Games.BlackPlayer = " + blackPlayer[2];
                             }
+                            //Apply player filter
                             if (white != "")
                             {
                                 selectGames.CommandText += " and Games.WhitePlayer = " + whitePlayer[2];
                             }
+                            //Apply opening filter
                             if (opening != "")
                             {
                                 selectGames.CommandText += " and Games.Moves like @opening";
                             }
-
-                            if(winner == "Draw")
+                            //Apply winner filter
+                            if (winner == "Draw")
                             {
                                 selectGames.CommandText += " and Games.Result = 'D'";
                             }
-                            else if(winner == "White")
+                            //Apply winner filter
+                            else if (winner == "White")
                             {
                                 selectGames.CommandText += " and Games.Result = 'W'";
                             }
-                            else if(winner == "Black")
+                            //Apply winner filter
+                            else if (winner == "Black")
                             {
                                 selectGames.CommandText += " and Games.Result = 'B'";
                             }
@@ -416,6 +441,7 @@ namespace ChessBrowser
                             selectGames.CommandText += ";";
                         }
                     }
+
                     selectGames.Parameters.AddWithValue("@start", start);
                     selectGames.Parameters.AddWithValue("@end", end);
                     selectGames.Parameters.AddWithValue("@opening", opening + "%");
